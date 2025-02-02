@@ -2,6 +2,9 @@ const { Router } = require("express");
 const router = Router();
 const db = require("../db");
 
+/**
+ * Get booking detail
+ */
 router.get("/detail/:bookingId", async (req, res) => {
   try {
     const bookingId = req.params.bookingId;
@@ -18,6 +21,9 @@ router.get("/detail/:bookingId", async (req, res) => {
   }
 });
 
+/**
+ *  Create new booking
+ */
 router.post("/", async (req, res) => {
   try {
     const booking = db.booking;

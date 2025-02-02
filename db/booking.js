@@ -38,7 +38,6 @@ exports.get = async (bookingId) => {
 
 exports.create = async (payload = {}) => {
   try {
-    console.dir(payload, "%o");
 
     await checkRequiredObjectKey(payload,["userId",  "startTime", "endTime","bookingDescription","repeatUntil"])
 
