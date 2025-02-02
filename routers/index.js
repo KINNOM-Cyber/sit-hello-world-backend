@@ -3,9 +3,11 @@ const router = Router();
 
 // Import all route file here
 const { testRoute } = require("./test-route");
+const { bookingRoute } = require("./booking");
 
 // assign a route to express router
 router.use(testRoute);
+router.use("/booking", bookingRoute);
 // router.use(<imported path route>)
 
 // export router index file
