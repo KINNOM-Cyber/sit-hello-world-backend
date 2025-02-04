@@ -1,3 +1,6 @@
-const booking = require("./booking");
+const connection = require("mysql2");
+const config = require("./config");
 
-module.exports = { booking };
+connection.createConnection({ ...config });
+
+module.exports = connection;

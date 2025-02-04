@@ -5,6 +5,8 @@ const router = Router();
 const { testRoute } = require("./test-route");
 const { bookingRoute } = require("./booking");
 
+const middleware = require("./middleware")
+
 // assign a route to express router
 router.use(testRoute);
 router.use("/booking", bookingRoute);
