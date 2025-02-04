@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
 /**
  * Edit booking detail
  */
-router.put("/", async (req, res) => {
+router.patch("/", async (req, res) => {
   try {
     return res.status(200).end();
   } catch (error) {
