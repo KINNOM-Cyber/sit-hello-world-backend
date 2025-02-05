@@ -2,10 +2,8 @@ const db = require("../db");
 
 exports.getAll = async () => {
   try {
-    await db.connect();
-
-    const [rows, fields] = await db.execute("select * from user;");
-
+    const connection = await db;
+    const [rows, fields] = await connection.execute("SELECT * FROM User");
     return Promise.resolve({ rows });
   } catch (error) {
     return Promise.reject({
@@ -15,9 +13,14 @@ exports.getAll = async () => {
   }
 };
 
-exports.getById = (userId) => {
+exports.getById = async (userId) => {
   try {
-    return Promise.resolve();
+    const connection = await db;
+    const [rows, fields] = await connection.execute(
+      `SELECT * FROM User WHERE UserId = '${userId}'`
+    );
+
+    return Promise.resolve({ ...rows[0] });
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
