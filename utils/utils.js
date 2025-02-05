@@ -11,7 +11,7 @@
  * @returns {Promise} - A promise that resolves if all required keys are present or rejects with an error message if any key is missing.
  */
 
-exports.checkRequiredObjectKey = (obj = {}, requiredKeys = []) => {
+export const checkRequiredObjectKey = (obj = {}, requiredKeys = []) => {
   if (!obj || typeof obj == "undefined" || !Object.entries(obj).length) {
     return Promise.reject("obj must be provided");
   }
