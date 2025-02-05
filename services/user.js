@@ -1,6 +1,12 @@
-exports.getAll = () => {
+const db = require("../db");
+
+exports.getAll = async () => {
   try {
-    return Promise.resolve();
+    await db.connect();
+
+    const [rows, fields] = await db.execute("select * from user;");
+
+    return Promise.resolve({ rows });
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
