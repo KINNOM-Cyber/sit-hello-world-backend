@@ -1,6 +1,6 @@
-const connection = require("mysql2");
+const { createConnection } = require("mysql2");
 const config = require("./config");
-
-connection.createConnection({ ...config });
+console.log(config)
+const connection = createConnection({ ...config });
 
 module.exports = connection;
