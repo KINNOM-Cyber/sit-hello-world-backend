@@ -1,9 +1,9 @@
 import express from "express"
 import connection from "./config/database.js";
 
-import bookingRouter from "./controllers/bookingController.js";
-import userRouter from "./controllers/userController.js";
-import roomRouter from "./controllers/roomController.js";
+import bookingRouter from "./routes/bookingRoutes.js";
+import userRouter from "./routes/userRoutes.js";
+import roomRouter from "./routes/roomRoutes.js";
 
 // const middleware = require("./middleware");
 const app = express();
