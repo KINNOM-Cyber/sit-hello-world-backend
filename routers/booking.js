@@ -8,7 +8,7 @@ const booking = require("../services/booking");
 router.get("/detail/:bookingId", async (req, res) => {
   try {
     const bookingId = req.params.bookingId;
-    const detial = await booking.get(bookingId);
+    const detial = await booking.getById(bookingId);
 
     return res.status(200).json({
       data: { ...detial.data },

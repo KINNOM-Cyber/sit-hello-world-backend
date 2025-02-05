@@ -1,6 +1,10 @@
-exports.getAll = () => {
+const db = require("../db");
+
+exports.getAll = async () => {
   try {
-    return Promise.resolve();
+    const connection = await db;
+    const [rows, fields] = await connection.execute("SELECT * FROM Room;");
+    return Promise.resolve({ rows });
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
@@ -9,9 +13,13 @@ exports.getAll = () => {
   }
 };
 
-exports.getById = (roomId) => {
+exports.getById = async (roomId) => {
   try {
-    return Promise.resolve();
+    const connection = await db;
+    const [rows, fields] = await connection.execute(
+      `select * from Room where RoomId = '${roomId}'`
+    );
+    return Promise.resolve({ ...rows[0] });
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
