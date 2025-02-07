@@ -8,7 +8,7 @@ import roomRouter from "./routes/roomRoutes.js";
 // const middleware = require("./middleware");
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
 // Assign routes to express router
 app.use("/booking", bookingRouter);
