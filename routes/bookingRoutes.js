@@ -83,12 +83,12 @@ bookingRouter.post("/:bookingId", async (req, res) => {
 /**
  * Edit booking detail
  */
-bookingRouter.patch("/:bookingId", async (req, res) => {
+bookingRouter.put("/edit/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
   const data = req.body;
   try {
     await booking.edit(bookingId,data);
-    return res.status(200).end({
+    return res.status(200).json({
       message: "Update Successful"
     });
   } catch (error) {
@@ -106,7 +106,7 @@ bookingRouter.delete("/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
   try {
     await booking.cancel(bookingId);
-    return res.status(200).json({
+    return res.status(200).end({
       message: "Delete Successful"
     });
   } catch (error) {

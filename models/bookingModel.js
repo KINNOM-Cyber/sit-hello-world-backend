@@ -131,7 +131,7 @@ export const cancel = async (bookingId) => {
       [bookingId]
     );
 
-    return rows ;
+    return Promise.resolve({ rows });
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
@@ -177,32 +177,26 @@ export const cancel = async (bookingId) => {
 export const edit = async (bookingId, payload = {}) => {
   try {
     const {
-      BookingDate,
-      BookingDescription,
+      Date,
+      Description,
       EndTime,
-      RepeatType,
-      RepeatUntil,
     } = payload;
 
-    const [result] = await db.promise().execute(
+    const [] = await db.promise().execute(
       `UPDATE mydb.Booking 
       SET 
-        BookingDate = ?, 
-        BookingDescription = ?,  
-        EndTime = ?,  
-        RepeatType = ?, 
-        RepeatUntil = ?
+        Date = ?, 
+        Description = ?,  
+        EndTime = ?
       WHERE BookingId = ?`,
       [
-        BookingDate,
-        BookingDescription,
+        Date,
+        Description,
         EndTime,
-        RepeatType,
-        RepeatUntil,
         bookingId,
       ]
     );
-
+     
     return Promise.resolve({
       message: "Booking updated successfully.",
       data: {
@@ -211,6 +205,8 @@ export const edit = async (bookingId, payload = {}) => {
       },
     });
   } catch (error) {
+    console.log("Error: ", error);
+    
     return Promise.reject({
       message: error.message || "Server Error",
       data: null,
