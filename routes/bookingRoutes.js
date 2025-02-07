@@ -27,15 +27,19 @@ bookingRouter.post("/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
   const payload = req.body;
   try {
-    const edit = await booking.create(bookingId,payload);
-    return res.status(200).end({
+    const latestBooking = await booking.findOne({
+      where: { BookingId: bookingId },
+      include: [{ model: Room }, { model: User }]
+    });
+
+    return res.status(200).json({
       success: true,
-      data: edit,
+      data: latestBooking, 
       message: "Create Successful"
     });
   } catch (error) {
     return res.status(400).json({
-      message: error.message ?? "Unknow error",
+      message: error.message ?? "Unknown error",
     });
   }
 });

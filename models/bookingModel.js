@@ -213,7 +213,7 @@ export const filter = async(roomId) => {
   try {
     `SELECT RoomId
     FROM Room 
-    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);`
+    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);` ,[roomId]
 
     return Promise.resolve();
   } catch (error) {
