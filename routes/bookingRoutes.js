@@ -66,7 +66,7 @@ bookingRouter.delete("/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
   try {
     await booking.cancel(bookingId);
-    return res.status(200).end({
+    return res.status(200).json({
       message: "Delete Successful"
     });
   } catch (error) {

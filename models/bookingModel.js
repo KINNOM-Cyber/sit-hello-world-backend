@@ -127,12 +127,12 @@ export const cancel = async (bookingId) => {
   try {
     const [rows, fileds] = await db.promise().query(
       `DELETE FROM mydb.Booking
-    WHERE BookingId =  ?;`, [bookingId]
+    WHERE BookingId =  ?`, [bookingId]
     );
-
-    return Promise.resolve({ rows });
+    return rows;
 
   } catch (error) {
+
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
