@@ -1,4 +1,6 @@
 import { checkRequiredObjectKey } from "../utils/utils.js";
+import db from "../config/database.js";
+import { buildings } from "../utils/constants.js";
 
 export const getAll = () => {
   try {
@@ -42,7 +44,6 @@ export const getById = async (bookingId) => {
     //     },
     //   },
     // });
-    
   } catch (error) {
     return Promise.reject({
       message: error.message ?? "Server Error",
@@ -88,13 +89,14 @@ export const create = async (payload = {}) => {
     //   "RepeatUntil",
     // ]);
 
-    const { UserId, StartTime, EndTime, BookingDescription, RepeatUntil } = payload;
+    const { name, description, date, startTime, endTime, buildingId, roomId } =
+      payload;
 
     // Execute the INSERT query
     const [result] = await db.promise().execute(
-      `INSERT INTO mydb.Booking (UserId, StartTime, EndTime, BookingDescription, RepeatUntil)
-      VALUES (?, ?, ?, ?, ?)`,
-      [UserId, StartTime, EndTime, BookingDescription, RepeatUntil]
+      `INSERT INTO mydb.Booking (Name, Description, Date, StartTime, EndTime, BuildingId, RoomId)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [name, description, new Date(date), startTime, endTime, buildingId, roomId]
     );
 
     // // Check if the insert was successful
@@ -104,7 +106,7 @@ export const create = async (payload = {}) => {
     //     data: null,
     //   });
     // }
-
+    console.log({ result });
     // Return success response with the inserted data
     return Promise.resolve({
       message: "Booking created successfully.",
@@ -113,7 +115,6 @@ export const create = async (payload = {}) => {
         ...payload,
       },
     });
-
   } catch (error) {
     return Promise.reject({
       message: error.message || "Server Error",
@@ -122,16 +123,15 @@ export const create = async (payload = {}) => {
   }
 };
 
-
 export const cancel = async (bookingId) => {
   try {
     const [rows, fileds] = await db.promise().query(
       `DELETE FROM mydb.Booking
-    WHERE BookingId =  ?;`, [bookingId]
+    WHERE BookingId =  ?;`,
+      [bookingId]
     );
 
     return Promise.resolve({ rows });
-
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
@@ -151,12 +151,12 @@ export const cancel = async (bookingId) => {
 //       "RepeatUntil",
 //     ]);
 
-//     `UPDATE mydb.Booking 
-//       SET 
-//         bookingDate = ?, 
-//         bookingDescription = ?,  
-//         endTime = ?,  
-//         repeatType = ?, 
+//     `UPDATE mydb.Booking
+//       SET
+//         bookingDate = ?,
+//         bookingDescription = ?,
+//         endTime = ?,
+//         repeatType = ?,
 //         repeatUntil = ?
 //       WHERE bookingId = ?`
 
@@ -176,8 +176,14 @@ export const cancel = async (bookingId) => {
 
 export const edit = async (bookingId, payload = {}) => {
   try {
-    const { BookingDate, BookingDescription, EndTime, RepeatType, RepeatUntil } = payload;
-    
+    const {
+      BookingDate,
+      BookingDescription,
+      EndTime,
+      RepeatType,
+      RepeatUntil,
+    } = payload;
+
     const [result] = await db.promise().execute(
       `UPDATE mydb.Booking 
       SET 
@@ -187,7 +193,14 @@ export const edit = async (bookingId, payload = {}) => {
         RepeatType = ?, 
         RepeatUntil = ?
       WHERE BookingId = ?`,
-      [BookingDate, BookingDescription, EndTime, RepeatType, RepeatUntil, bookingId]
+      [
+        BookingDate,
+        BookingDescription,
+        EndTime,
+        RepeatType,
+        RepeatUntil,
+        bookingId,
+      ]
     );
 
     return Promise.resolve({
@@ -197,7 +210,6 @@ export const edit = async (bookingId, payload = {}) => {
         ...payload,
       },
     });
-
   } catch (error) {
     return Promise.reject({
       message: error.message || "Server Error",
@@ -206,12 +218,14 @@ export const edit = async (bookingId, payload = {}) => {
   }
 };
 
-export const filter = async(roomId) => {
+export const filter = async (roomId) => {
   try {
     const [results] = await db.promise().execute(
-    `SELECT RoomId
+      `SELECT RoomId
     FROM Room 
-    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);` , [roomId]);
+    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);`,
+      [roomId]
+    );
 
     return Promise.resolve(results);
   } catch (error) {
@@ -222,11 +236,59 @@ export const filter = async(roomId) => {
   }
 };
 
+export const find = async ({ buildingId, startTime, endTime, date }) => {
+  try {
 
-export const filterDate = async(startTime, endTime) => {
+    let building = buildings.find((b) => b.id == buildingId) 
+
+    if (!building) {
+      return Promise.reject({message: "Building not found!"})
+    }
+
+    const result = await Promise.all(building.rooms.map(async (room) => {
+      const [rows] = await db.promise().execute(
+        `SELECT 1 FROM Booking 
+         WHERE Date = ? 
+         AND RoomID = ? 
+         AND BuildingID = ?
+         AND (
+           (startTime < ? AND endTime > ?)  
+           OR (startTime <= ? AND endTime > ?) 
+           OR (startTime >= ? AND endTime <= ?) 
+         )`, 
+        [new Date(date), room.id, buildingId, startTime, startTime, endTime, endTime, startTime, endTime]
+      );
+      
+
+      return {
+        ...room,
+        status: !rows.length > 0
+      };
+    }));
+    
+
+    console.log()
+
+    // const [result] = await db.promise().execute(`SELECT * FROM Booking where Date = ? and startTime = ? and endTime = ? and RoomID = ? and BuildingID = ?`, [
+    //   date, startTime, endTime, roomId, buildingId
+    // ]);
+
+    return Promise.resolve({
+      ...building,
+      rooms: result
+    });
+  } catch (error) {
+    return Promise.reject({
+      message: error.message || error || "Server Error",
+      data: null,
+    });
+  }
+};
+
+export const filterDate = async (startTime, endTime) => {
   try {
     const [results] = await db.promise().execute(
-    `SELECT 
+      `SELECT 
     r.BuildingName AS name,
     JSON_ARRAYAGG(
         JSON_OBJECT(
@@ -244,9 +306,11 @@ LEFT JOIN Booking b
     AND TIMESTAMP(?) < b.EndTime 
     AND TIMESTAMP(?) > b.StartTime
 GROUP BY r.BuildingName;
-` , [startTime, endTime]);
+`,
+      [startTime, endTime]
+    );
 
-    return Promise.resolve(results)
+    return Promise.resolve(results);
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",

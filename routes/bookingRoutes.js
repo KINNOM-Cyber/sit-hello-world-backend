@@ -2,6 +2,42 @@ import { Router } from "express";
 const bookingRouter = Router();
 import * as booking from "../models/bookingModel.js";
 
+
+bookingRouter.get("/find", async (req, res) => {
+  try {
+    const payload = req.query
+    const result = await booking.find(payload)
+
+    console.log()
+
+    return res.status(200).json({
+      response: result,
+    })
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message ?? "Unknow error",
+    });
+  }
+})
+
+bookingRouter.post("/create", async (req, res) => {
+  try {
+    const payload = req.body
+    const result = await booking.create(payload)
+
+    console.log()
+
+    return res.status(200).json({
+      response: {...result},
+      ...payload
+    })
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message ?? "Unknow error",
+    });
+  }
+})
+
 /**
  * Get booking detail
  */
