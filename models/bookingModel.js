@@ -207,15 +207,13 @@ export const edit = async (bookingId, payload = {}) => {
 };
 
 export const filter = async(roomId) => {
-
-  // const {roomId} = roomId;
-
   try {
+    const [results] = await db.promise().execute(
     `SELECT RoomId
     FROM Room 
-    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);` ,[roomId]
+    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);` , [roomId]);
 
-    return Promise.resolve();
+    return Promise.resolve(results);
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
@@ -225,8 +223,9 @@ export const filter = async(roomId) => {
 };
 
 
-export const filterDate = async() => {
+export const filterDate = async(startTime, endTime) => {
   try {
+    const [results] = await db.promise().execute(
     `SELECT 
     r.BuildingName AS name,
     JSON_ARRAYAGG(
@@ -245,8 +244,9 @@ LEFT JOIN Booking b
     AND TIMESTAMP(?) < b.EndTime 
     AND TIMESTAMP(?) > b.StartTime
 GROUP BY r.BuildingName;
-`
-    return Promise.resolve
+` , [startTime, endTime]);
+
+    return Promise.resolve(results)
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
