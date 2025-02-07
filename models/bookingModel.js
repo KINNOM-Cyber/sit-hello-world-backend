@@ -131,7 +131,7 @@ export const cancel = async (bookingId) => {
       [bookingId]
     );
 
-    return Promise.resolve({ rows });
+    return rows ;
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
