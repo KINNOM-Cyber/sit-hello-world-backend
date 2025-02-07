@@ -223,3 +223,34 @@ export const filter = async(roomId) => {
     });
   }
 };
+
+
+export const filterDate = async() => {
+  try {
+    `SELECT 
+    r.BuildingName AS name,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'id', r.RoomId,
+            'code', r.RoomCode,
+            'status', CASE 
+                        WHEN b.BookingId IS NULL THEN TRUE  
+                        ELSE FALSE  
+                      END
+        )
+    ) AS rooms
+FROM Room r
+LEFT JOIN Booking b 
+    ON r.RoomId = b.RoomID 
+    AND TIMESTAMP(?) < b.EndTime 
+    AND TIMESTAMP(?) > b.StartTime
+GROUP BY r.BuildingName;
+`
+    return Promise.resolve
+  } catch (error) {
+    return Promise.reject({
+      message: error.message || error || "Server Error",
+      data: null,
+    });
+  }
+};
