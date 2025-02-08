@@ -139,8 +139,13 @@ export const cancel = async (bookingId) => {
       [bookingId]
     );
 
-    return Promise.resolve({ rows });
+    if (rows.affectedRows === 0) {
+      return Promise.reject({ message: "Booking not found", data: null });
+    }
+
+    return Promise.resolve();
   } catch (error) {
+    console.log("Error : ", error);
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
