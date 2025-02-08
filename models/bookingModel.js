@@ -189,17 +189,22 @@ export const cancel = async (bookingId) => {
 
 export const edit = async (bookingId, payload = {}) => {
   try {
-    const { Date, Description, EndTime } = payload;
+    const {
+      name,
+      description
+    } = payload;
 
-    const [] = await db.promise().execute(
+    const [result] = await db.promise().execute(
       `UPDATE mydb.Booking 
-      SET 
-        Date = ?, 
-        Description = ?,  
-        EndTime = ?
+      SET Name = ?, Description = ?
       WHERE BookingId = ?`,
-      [Date, Description, EndTime, bookingId]
+      [name, description, bookingId]
     );
+
+    if (result.affectedRows === 0) {
+      console.log(result);
+      return Promise.reject({ message: "Booking not found", data: null });
+    }
 
     return Promise.resolve({
       message: "Booking updated successfully.",
@@ -210,7 +215,6 @@ export const edit = async (bookingId, payload = {}) => {
     });
   } catch (error) {
     console.log("Error: ", error);
-
     return Promise.reject({
       message: error.message || "Server Error",
       data: null,
