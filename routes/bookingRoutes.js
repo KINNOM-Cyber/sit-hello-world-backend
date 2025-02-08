@@ -3,7 +3,7 @@ const bookingRouter = Router();
 import * as booking from "../models/bookingModel.js";
 
 
-bookingRouter.get("/find", async (req, res) => {
+bookingRouter.get("/find:bookingId", async (req, res) => {
   try {
     const payload = req.query
     const result = await booking.find(payload)
