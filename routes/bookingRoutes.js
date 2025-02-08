@@ -2,41 +2,38 @@ import { Router } from "express";
 const bookingRouter = Router();
 import * as booking from "../models/bookingModel.js";
 
-
 bookingRouter.get("/find", async (req, res) => {
   try {
-    const payload = req.query
-    const result = await booking.find(payload)
-
-    console.log()
+    const payload = req.query;
+    const result = await booking.find(payload);
 
     return res.status(200).json({
       response: result,
-    })
+      payload,
+    });
   } catch (error) {
     return res.status(400).json({
       message: error.message ?? "Unknow error",
     });
   }
-})
+});
 
 bookingRouter.post("/create", async (req, res) => {
   try {
-    const payload = req.body
-    const result = await booking.create(payload)
+    const payload = req.body;
 
-    console.log()
+    const result = await booking.create(payload);
 
     return res.status(200).json({
-      response: {...result},
-      ...payload
-    })
+      response: { ...result },
+      ...payload,
+    });
   } catch (error) {
     return res.status(400).json({
       message: error.message ?? "Unknow error",
     });
   }
-})
+});
 
 /**
  * Get booking detail
@@ -65,13 +62,13 @@ bookingRouter.post("/:bookingId", async (req, res) => {
   try {
     const latestBooking = await booking.findOne({
       where: { BookingId: bookingId },
-      include: [{ model: Room }, { model: User }]
+      include: [{ model: Room }, { model: User }],
     });
 
     return res.status(200).json({
       success: true,
-      data: latestBooking, 
-      message: "Create Successful"
+      response: latestBooking,
+      message: "Create Successful",
     });
   } catch (error) {
     return res.status(400).json({
@@ -83,20 +80,20 @@ bookingRouter.post("/:bookingId", async (req, res) => {
 /**
  * Edit booking detail
  */
-bookingRouter.patch("/:bookingId", async (req, res) => {
+bookingRouter.put("/edit/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
   const data = req.body;
   try {
-    await booking.edit(bookingId,data);
-    return res.status(200).end({
-      message: "Update Successful"
+    await booking.edit(bookingId, data);
+    return res.status(200).json({
+      message: "Update Successful",
     });
   } catch (error) {
     return res.status(400).json({
       message: error.message ?? "Unknow error",
     });
   }
-})
+});
 
 /**
  * Cancel booking
@@ -107,13 +104,13 @@ bookingRouter.delete("/:bookingId", async (req, res) => {
   try {
     await booking.cancel(bookingId);
     return res.status(200).json({
-      message: "Delete Successful"
+      message: "Delete Successful",
     });
   } catch (error) {
     return res.status(400).json({
       message: error.message ?? "Unknow error",
     });
   }
-})
+});
 
 export default bookingRouter;
