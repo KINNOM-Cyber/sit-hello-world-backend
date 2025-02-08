@@ -16,44 +16,62 @@ export const getAll = () => {
 export const getById = async (bookingId) => {
   try {
     if (!bookingId) {
-      throw new Error("Booking ID must not be empty");
+      throw new Error("bookingID must not be empty");
     }
 
-    const [rows] = await db.promise().execute(
-      `SELECT * FROM mydb.Booking WHERE BookingId = ?`,
-      [bookingId]
-    );
-
-    if (rows.length === 0) {
-      return null; // Return null if no record found
-    }
-
-    return rows[0]; // Return the first matching record
+  
   } catch (error) {
     return Promise.reject({
-      message: error.message || "Server Error",
+      message: error.message ?? "Server Error",
       data: null,
     });
   }
 };
 
+
+
 export const create = async (payload = {}) => {
   try {
-    const { username, name, description, date, startTime, endTime, roomId } =
-      payload;
+    // Ensure required keys exist in payload
+    // await checkRequiredObjectKey(payload, [
+    //   "UserId",
+    //   "StartTime",
+    //   "EndTime",
+    //   "BookingDescription",
+    //   "RepeatUntil",
+    // ]);
 
+    const {
+      name,
+      username,
+      description,
+      date,
+      startTime,
+      endTime,
+      buildingId,
+      roomId,
+    } = payload;
+
+    // Execute the INSERT query
     const [result] = await db.promise().execute(
-      `INSERT INTO mydb.Booking (Username, Name, Description, Date, StartTime, EndTime, RoomId)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [username, name, description, new Date(date), startTime, endTime, roomId]
+      `INSERT INTO mydb.Booking (Name, Username, Description, Date, StartTime, EndTime, BuildingId, RoomId)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        username,
+        description,
+        new Date(date),
+        startTime,
+        endTime,
+        buildingId,
+        roomId,
+      ]
     );
-
-    console.log({ result });
 
     return Promise.resolve({
       message: "Booking created successfully.",
       data: {
-        BookingId: result.insertId,
+        BookingId: result.insertId, // Return the auto-generated BookingId
         ...payload,
       },
     });
@@ -65,7 +83,6 @@ export const create = async (payload = {}) => {
   }
 };
 
-
 export const cancel = async (bookingId) => {
   try {
     const [rows, fileds] = await db.promise().query(
@@ -74,14 +91,8 @@ export const cancel = async (bookingId) => {
       [bookingId]
     );
 
-    if (rows.affectedRows === 0) {
-      return Promise.reject({ message: "Booking not found", data: null });
-    }
-
-    return rows;
-
+    return Promise.resolve({ rows });
   } catch (error) {
-    console.log("Error : ", error);
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
@@ -89,24 +100,20 @@ export const cancel = async (bookingId) => {
   }
 };
 
+
 export const edit = async (bookingId, payload = {}) => {
   try {
-    const {
-      Name,
-      Description
-    } = payload;
+    const { Date, Description, EndTime } = payload;
 
-    const [result] = await db.promise().execute(
+    const [] = await db.promise().execute(
       `UPDATE mydb.Booking 
-      SET Name = ?, Description = ?
+      SET 
+        Date = ?, 
+        Description = ?,  
+        EndTime = ?
       WHERE BookingId = ?`,
-      [Name, Description, bookingId]
+      [Date, Description, EndTime, bookingId]
     );
-
-    if (result.affectedRows === 0) {
-      console.log(result);
-      return Promise.reject({ message: "Booking not found", data: null });
-    }
 
     return Promise.resolve({
       message: "Booking updated successfully.",
@@ -117,6 +124,7 @@ export const edit = async (bookingId, payload = {}) => {
     });
   } catch (error) {
     console.log("Error: ", error);
+
     return Promise.reject({
       message: error.message || "Server Error",
       data: null,
@@ -144,16 +152,16 @@ export const filter = async (roomId) => {
 
 export const find = async ({ buildingId, startTime, endTime, date }) => {
   try {
-
-    let building = buildings.find((b) => b.id == buildingId) 
+    let building = buildings.find((b) => b.id == buildingId);
 
     if (!building) {
-      return Promise.reject({message: "Building not found!"})
+      return Promise.reject({ message: "Building not found!" });
     }
 
-    const result = await Promise.all(building.rooms.map(async (room) => {
-      const [rows] = await db.promise().execute(
-        `SELECT 1 FROM Booking 
+    const result = await Promise.all(
+      building.rooms.map(async (room) => {
+        const [rows] = await db.promise().execute(
+          `SELECT 1 FROM Booking 
          WHERE Date = ? 
          AND RoomID = ? 
          AND BuildingID = ?
@@ -161,23 +169,30 @@ export const find = async ({ buildingId, startTime, endTime, date }) => {
            (startTime < ? AND endTime > ?)  
            OR (startTime <= ? AND endTime > ?) 
            OR (startTime >= ? AND endTime <= ?) 
-         )`, 
-        [new Date(date), room.id, buildingId, startTime, startTime, endTime, endTime, startTime, endTime]
-      );
-      
+         )`,
+          [
+            new Date(date),
+            room.id,
+            buildingId,
+            startTime,
+            startTime,
+            endTime,
+            endTime,
+            startTime,
+            endTime,
+          ]
+        );
 
-      return {
-        ...room,
-        status: !rows.length > 0
-      };
-    }));
-    
-
-    console.log("Booking ID received:", bookingId);
+        return {
+          ...room,
+          status: !rows.length > 0,
+        };
+      })
+    );
 
     return Promise.resolve({
       ...building,
-      rooms: result
+      rooms: result,
     });
   } catch (error) {
     return Promise.reject({
