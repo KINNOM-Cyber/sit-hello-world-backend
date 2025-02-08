@@ -43,38 +43,23 @@ bookingRouter.post("/create", async (req, res) => {
  */
 bookingRouter.get("/detail/:bookingId", async (req, res) => {
   try {
-    const bookingId = req.params.bookingId;
-    const detial = await booking.getById(bookingId);
+    const bookingId = parseInt(req.params.bookingId, 10); // 🔹 Convert to integer
+    console.log("Booking ID received:", bookingId); // ✅ Debugging
 
-    return res.status(200).json({
-      data: { ...detial.data },
-    });
+    if (isNaN(bookingId)) {
+      return res.status(400).json({ message: "Invalid Booking ID" });
+    }
+
+    const detail = await booking.getById(bookingId);
+    console.log("Detail found:", detail); // ✅ Debugging
+
+    if (!detail) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    return res.status(200).json({ data: detail });
   } catch (error) {
-    return res.status(400).json({
-      message: error.message ?? "Unknow error",
-    });
-    
-  }
-});
-
-/**
- *  Create new booking
- */
-bookingRouter.post("/:bookingId", async (req, res) => {
-  const { bookingId } = req.params;
-  const payload = req.body;
-  try {
-    const latestBooking = await booking.findOne({
-      where: { BookingId: bookingId },
-      include: [{ model: Room }, { model: User }]
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: latestBooking, 
-      message: "Create Successful"
-    });
-  } catch (error) {
+    console.log("Error fetching booking:", error);
     return res.status(400).json({
       message: error.message ?? "Unknown error",
     });
@@ -116,5 +101,8 @@ bookingRouter.delete("/:bookingId", async (req, res) => {
     });
   }
 })
+
+
+
 
 export default bookingRouter;
