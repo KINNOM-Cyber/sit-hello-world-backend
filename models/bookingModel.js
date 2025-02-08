@@ -116,6 +116,8 @@ export const create = async (payload = {}) => {
       },
     });
   } catch (error) {
+    console.log("Error: ", error);
+    
     return Promise.reject({
       message: error.message || "Server Error",
       data: null,
@@ -131,8 +133,14 @@ export const cancel = async (bookingId) => {
       [bookingId]
     );
 
+    if (rows.affectedRows === 0) {
+      return Promise.reject({ message: "Booking not found", data: null });
+    }
+
     return Promise.resolve({ rows });
   } catch (error) {
+    console.log("Error: ", error);
+
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
@@ -177,25 +185,28 @@ export const cancel = async (bookingId) => {
 export const edit = async (bookingId, payload = {}) => {
   try {
     const {
-      Date,
+      Name,
       Description,
-      EndTime,
     } = payload;
 
-    const [] = await db.promise().execute(
+    const [results] = await db.promise().execute(
       `UPDATE mydb.Booking 
       SET 
-        Date = ?, 
-        Description = ?,  
-        EndTime = ?
+        Name = ?, 
+        Description = ?
       WHERE BookingId = ?`,
       [
-        Date,
+        Name,
         Description,
-        EndTime,
         bookingId,
       ]
     );
+    
+    
+    if (results.affectedRows === 0) {
+      console.log(results);
+      return Promise.reject({ message: "Booking not found", data: null });
+    }
      
     return Promise.resolve({
       message: "Booking updated successfully.",
@@ -225,6 +236,8 @@ export const filter = async (roomId) => {
 
     return Promise.resolve(results);
   } catch (error) {
+    console.log("Error: ", error);
+
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
@@ -274,6 +287,8 @@ export const find = async ({ buildingId, startTime, endTime, date }) => {
       rooms: result
     });
   } catch (error) {
+    console.log("Error: ", error);
+
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
@@ -308,6 +323,8 @@ GROUP BY r.BuildingName;
 
     return Promise.resolve(results);
   } catch (error) {
+    console.log("Error: ", error);
+    
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
