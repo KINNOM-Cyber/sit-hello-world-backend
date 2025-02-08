@@ -1,4 +1,6 @@
 import { checkRequiredObjectKey } from "../utils/utils.js";
+import db from "../config/database.js";
+import { buildings } from "../utils/constants.js";
 
 export const getAll = () => {
   try {
@@ -14,106 +16,47 @@ export const getAll = () => {
 export const getById = async (bookingId) => {
   try {
     if (!bookingId) {
-      throw new Error("bookingID must not be empty");
+      throw new Error("Booking ID must not be empty");
     }
 
-    // database query
+    const [rows] = await db.promise().execute(
+      `SELECT * FROM mydb.Booking WHERE BookingId = ?`,
+      [bookingId]
+    );
 
-    // need output like this
-    // return Promise.resolve({
-    //   data: {
-    //     bookingId,
-    //     bookingDate: new Date(),
-    //     bookingDescription: "Booking test",
-    //     startTime: new Date("2025-02-10").setHours(10),
-    //     endTime: new Date("2025-02-10").setHours(13),
-    //     repeatUntil: new Date("2025-05-30"),
-    //     user: {
-    //       userId: 1,
-    //       name: "John",
-    //       lastname: "Cena",
-    //       role: "student",
-    //       email: "johny@mail.kmutt.ac.th",
-    //     },
-    //     room: {
-    //       roomId: 1,
-    //       buildingName: "LX",
-    //       roomCode: "LX10/3-4",
-    //     },
-    //   },
-    // });
-    
+    if (rows.length === 0) {
+      return null; // Return null if no record found
+    }
+
+    return rows[0]; // Return the first matching record
   } catch (error) {
     return Promise.reject({
-      message: error.message ?? "Server Error",
+      message: error.message || "Server Error",
       data: null,
     });
   }
 };
 
-// exports.create = async (payload = {}) => {
-//   try {
-//     await checkRequiredObjectKey(payload, [
-//       "userId",
-//       "startTime",
-//       "endTime",
-//       "bookingDescription",
-//       "repeatUntil",
-//     ]);
-
-//     `INSERT INTO Booking (UserId, StartTime, EndTime, BookingDescription, RepeatUntil)
-//       VALUES (?, ?, ?, ?, ?)`
-
-//     return Promise.resolve({
-//       data: {
-//         ...payload,
-//       },
-//     });
-//   } catch (error) {
-//     return Promise.reject({
-//       message: error.message || error || "Server Error",
-//       data: null,
-//     });
-//   }
-// };
-
 export const create = async (payload = {}) => {
   try {
-    // Ensure required keys exist in payload
-    // await checkRequiredObjectKey(payload, [
-    //   "UserId",
-    //   "StartTime",
-    //   "EndTime",
-    //   "BookingDescription",
-    //   "RepeatUntil",
-    // ]);
+    const { username, name, description, date, startTime, endTime, roomId } =
+      payload;
 
-    const { UserId, StartTime, EndTime, BookingDescription, RepeatUntil } = payload;
-
-    // Execute the INSERT query
     const [result] = await db.promise().execute(
-      `INSERT INTO mydb.Booking (UserId, StartTime, EndTime, BookingDescription, RepeatUntil)
-      VALUES (?, ?, ?, ?, ?)`,
-      [UserId, StartTime, EndTime, BookingDescription, RepeatUntil]
+      `INSERT INTO mydb.Booking (Username, Name, Description, Date, StartTime, EndTime, RoomId)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [username, name, description, new Date(date), startTime, endTime, roomId]
     );
 
-    // // Check if the insert was successful
-    // if (result.affectedRows === 0) {
-    //   return Promise.reject({
-    //     message: "Booking creation failed.",
-    //     data: null,
-    //   });
-    // }
+    console.log({ result });
 
-    // Return success response with the inserted data
     return Promise.resolve({
       message: "Booking created successfully.",
       data: {
-        BookingId: result.insertId, // Return the auto-generated BookingId
+        BookingId: result.insertId,
         ...payload,
       },
     });
-
   } catch (error) {
     return Promise.reject({
       message: error.message || "Server Error",
@@ -127,12 +70,18 @@ export const cancel = async (bookingId) => {
   try {
     const [rows, fileds] = await db.promise().query(
       `DELETE FROM mydb.Booking
-    WHERE BookingId =  ?`, [bookingId]
+    WHERE BookingId =  ?;`,
+      [bookingId]
     );
+
+    if (rows.affectedRows === 0) {
+      return Promise.reject({ message: "Booking not found", data: null });
+    }
+
     return rows;
 
   } catch (error) {
-
+    console.log("Error : ", error);
     return Promise.reject({
       message: error.message || error || "Server Error",
       data: null,
@@ -140,55 +89,24 @@ export const cancel = async (bookingId) => {
   }
 };
 
-// exports.edit = async (bookingId, payload = {}) => {
-//   try {
-
-//     await checkRequiredObjectKey(payload, [
-//       "BookingDate",
-//       "BookingDescription",
-//       "EndTime",
-//       "RepeatType",
-//       "RepeatUntil",
-//     ]);
-
-//     `UPDATE mydb.Booking 
-//       SET 
-//         bookingDate = ?, 
-//         bookingDescription = ?,  
-//         endTime = ?,  
-//         repeatType = ?, 
-//         repeatUntil = ?
-//       WHERE bookingId = ?`
-
-//     return Promise.resolve({
-//       data: {
-//         ...payload,
-//       },
-//     });
-
-//   } catch (error) {
-//     return Promise.reject({
-//       message: error.message || error || "Server Error",
-//       data: null,
-//     });
-//   }
-// };
-
 export const edit = async (bookingId, payload = {}) => {
   try {
-    const { BookingDate, BookingDescription, EndTime, RepeatType, RepeatUntil } = payload;
-    
+    const {
+      Name,
+      Description
+    } = payload;
+
     const [result] = await db.promise().execute(
       `UPDATE mydb.Booking 
-      SET 
-        BookingDate = ?, 
-        BookingDescription = ?,  
-        EndTime = ?,  
-        RepeatType = ?, 
-        RepeatUntil = ?
+      SET Name = ?, Description = ?
       WHERE BookingId = ?`,
-      [BookingDate, BookingDescription, EndTime, RepeatType, RepeatUntil, bookingId]
+      [Name, Description, bookingId]
     );
+
+    if (result.affectedRows === 0) {
+      console.log(result);
+      return Promise.reject({ message: "Booking not found", data: null });
+    }
 
     return Promise.resolve({
       message: "Booking updated successfully.",
@@ -197,8 +115,8 @@ export const edit = async (bookingId, payload = {}) => {
         ...payload,
       },
     });
-
   } catch (error) {
+    console.log("Error: ", error);
     return Promise.reject({
       message: error.message || "Server Error",
       data: null,
@@ -206,16 +124,95 @@ export const edit = async (bookingId, payload = {}) => {
   }
 };
 
-export const filter = async(roomId) => {
-
-  // const {roomId} = roomId;
-
+export const filter = async (roomId) => {
   try {
-    `SELECT RoomId
+    const [results] = await db.promise().execute(
+      `SELECT RoomId
     FROM Room 
-    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);`
+    WHERE RoomId NOT IN (SELECT DISTINCT RoomId FROM Booking);`,
+      [roomId]
+    );
 
-    return Promise.resolve();
+    return Promise.resolve(results);
+  } catch (error) {
+    return Promise.reject({
+      message: error.message || error || "Server Error",
+      data: null,
+    });
+  }
+};
+
+export const find = async ({ buildingId, startTime, endTime, date }) => {
+  try {
+
+    let building = buildings.find((b) => b.id == buildingId) 
+
+    if (!building) {
+      return Promise.reject({message: "Building not found!"})
+    }
+
+    const result = await Promise.all(building.rooms.map(async (room) => {
+      const [rows] = await db.promise().execute(
+        `SELECT 1 FROM Booking 
+         WHERE Date = ? 
+         AND RoomID = ? 
+         AND BuildingID = ?
+         AND (
+           (startTime < ? AND endTime > ?)  
+           OR (startTime <= ? AND endTime > ?) 
+           OR (startTime >= ? AND endTime <= ?) 
+         )`, 
+        [new Date(date), room.id, buildingId, startTime, startTime, endTime, endTime, startTime, endTime]
+      );
+      
+
+      return {
+        ...room,
+        status: !rows.length > 0
+      };
+    }));
+    
+
+    console.log("Booking ID received:", bookingId);
+
+    return Promise.resolve({
+      ...building,
+      rooms: result
+    });
+  } catch (error) {
+    return Promise.reject({
+      message: error.message || error || "Server Error",
+      data: null,
+    });
+  }
+};
+
+export const filterDate = async (startTime, endTime) => {
+  try {
+    const [results] = await db.promise().execute(
+      `SELECT 
+    r.BuildingName AS name,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'id', r.RoomId,
+            'code', r.RoomCode,
+            'status', CASE 
+                        WHEN b.BookingId IS NULL THEN TRUE  
+                        ELSE FALSE  
+                      END
+        )
+    ) AS rooms
+FROM Room r
+LEFT JOIN Booking b 
+    ON r.RoomId = b.RoomID 
+    AND TIMESTAMP(?) < b.EndTime 
+    AND TIMESTAMP(?) > b.StartTime
+GROUP BY r.BuildingName;
+`,
+      [startTime, endTime]
+    );
+
+    return Promise.resolve(results);
   } catch (error) {
     return Promise.reject({
       message: error.message || error || "Server Error",
