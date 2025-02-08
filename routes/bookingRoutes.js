@@ -12,6 +12,7 @@ bookingRouter.get("/find", async (req, res) => {
 
     return res.status(200).json({
       response: result,
+      payload
     })
   } catch (error) {
     return res.status(400).json({
@@ -24,8 +25,6 @@ bookingRouter.post("/create", async (req, res) => {
   try {
     const payload = req.body
     const result = await booking.create(payload)
-
-    console.log()
 
     return res.status(200).json({
       response: {...result},

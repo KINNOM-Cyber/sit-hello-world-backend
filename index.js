@@ -1,4 +1,5 @@
 import express from "express"
+import cors from "cors"
 import connection from "./config/database.js";
 
 import bookingRouter from "./routes/bookingRoutes.js";
@@ -7,6 +8,7 @@ import roomRouter from "./routes/roomRoutes.js";
 
 // const middleware = require("./middleware");
 const app = express();
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
